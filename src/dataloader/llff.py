@@ -2,7 +2,7 @@ import numpy as np
 from src.dataloader.llff_utils import load_llff_data, create_cim
 from src.geometric_utils.get_ray import get_rays_np
 
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import torch
 
 class LlffDataset(Dataset):
@@ -28,7 +28,7 @@ class LlffProcessor:
         self.llffhold = 8
         self.no_ndc = False
 
-        self.basedir = r'C:\Users\Asus\Downloads\VINAI\ComputerGraphic\nerf-pytorch\data\nerf_llff_data\fern'
+        self.basedir = r'C:\Users\Asus\Downloads\VINAI\ComputerGraphic\data\nerf_llff_data\trex'
         self.batch_size = 1024
 
         self.i_train = []
@@ -106,3 +106,17 @@ class LlffProcessor:
 
         self.train_data = train_rays_rgb
         self.test_data = test_rays_rgb
+
+
+def get_data_loader(batch_size, device):
+    data_processor = LlffProcessor()
+    train_data = data_processor.get_train_data()
+    test_data = data_processor.get_test_data()
+
+    LlffTrainData = LlffDataset(train_data, device)
+    LlffTestData = LlffDataset(test_data, device)
+
+    train_dataloader = DataLoader(LlffTrainData, batch_size=batch_size, shuffle=True, num_workers=0)
+    test_dataloader = DataLoader(LlffTestData, batch_size=batch_size, shuffle=False, num_workers=0)
+
+    return train_dataloader, test_dataloader
