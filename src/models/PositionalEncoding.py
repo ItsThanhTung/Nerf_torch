@@ -49,9 +49,7 @@ class PositionalEncoding:
 def get_position_encoder(multires, i=0):
     if i == -1:
         return nn.Identity(), 3
-    
-    
-    positional_encoder = PositionalEncoding(multires)
 
+    positional_encoder = PositionalEncoding(multires)
     embed = lambda x, eo=positional_encoder : eo.encode(x)
     return embed, positional_encoder.out_dim

@@ -13,7 +13,7 @@ class LlffDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        return self.data[idx][:2], self.data[idx][2]   # (ro, rd), target
+        return self.data[idx][0], self.data[idx][0], self.data[idx][2]   # (ro, rd), target
 
 
 
@@ -43,6 +43,8 @@ class LlffProcessor:
 
         self.preprocess_dataset()
 
+    def get_camera_intrinsic(self):
+        return self.K, self.H, self.W, self.focal, self.near, self.far
 
     def get_train_data(self):
         return self.train_data
@@ -119,4 +121,4 @@ def get_data_loader(batch_size, device):
     train_dataloader = DataLoader(LlffTrainData, batch_size=batch_size, shuffle=True, num_workers=0)
     test_dataloader = DataLoader(LlffTestData, batch_size=batch_size, shuffle=False, num_workers=0)
 
-    return train_dataloader, test_dataloader
+    return train_dataloader, test_dataloader, data_processor.get_camera_intrinsic()
