@@ -19,6 +19,7 @@ class Rendering:
         self.rays_o, self.rays_d = ray_batch[:,0:3], ray_batch[:,3:6]
         self.viewdirs = ray_batch[:,-3:] if ray_batch.shape[-1] > 8 else None
 
+
     def sample_coarsed_pts(self, ray_batch):
         bounds = torch.reshape(ray_batch[...,6:8], [-1,1,2])
         near, far = bounds[...,0], bounds[...,1] # [-1,1]
@@ -59,6 +60,7 @@ class Rendering:
         self.fined_z_vals = z_vals
         return pts
 
+
     def rendering(self, raw, is_fined):
         if not is_fined:
             rgb_map, disp_map, acc_map, weights, depth_map = raw2outputs(raw, self.coarsed_z_vals, \
@@ -81,4 +83,28 @@ class Rendering:
             self.fined_depth_map = depth_map
 
         return rgb_map, disp_map, acc_map, weights, depth_map
+
+    
+    def render_rays(self, ray_batch, coarsed_net, fined_net):
+        self.set_rays(ray_batch)
+
+        pts = self.sample_coarsed_pts(input)
+        raw = coarsed_net.forward(pts, self.viewdirs)
+        rgb_map, disp_map, acc_map, weights, depth_map = self.rendering(raw, is_fined=False)
+
+        fined_pts = self.sample_fined_pts()
+        fined_raw = fined_net.forward(fined_pts, self.viewdirs)
+        fined_rgb_map, fined_disp_map, fined_acc_map, fined_weights, fined_depth_map = self.rendering(fined_raw, is_fined=True)
+
+        return {"rgb_map"                 : rgb_map,
+                "disp_map"                : disp_map,
+                "acc_map"                 : acc_map,
+                "weights"                 : weights,
+                "depth_map"               : depth_map,
+                "fined_rgb_map"           : fined_rgb_map,
+                "depthfined_disp_map_map" : fined_disp_map,
+                "fined_acc_map"           : fined_acc_map,
+                "fined_weights"           : fined_weights,
+                "fined_depth_map"         : fined_depth_map,}
+
 
