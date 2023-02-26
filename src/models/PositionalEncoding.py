@@ -2,8 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
-
 class PositionalEncoding:
     def __init__(self, multires):
         self.max_freq_log2 = multires-1
@@ -53,3 +51,9 @@ def get_position_encoder(multires, i=0):
     positional_encoder = PositionalEncoding(multires)
     embed = lambda x, eo=positional_encoder : eo.encode(x)
     return embed, positional_encoder.out_dim
+
+
+def get_coord_view_encoder():
+    coord_encoder_fn, input_coord_ch =  get_position_encoder(multires=10, i=0)          # hard code
+    viewdir_encoder_fn, input_viewdir_ch =  get_position_encoder(multires=4, i=0)       # hard code
+    return [coord_encoder_fn, input_coord_ch], [viewdir_encoder_fn, input_viewdir_ch]
