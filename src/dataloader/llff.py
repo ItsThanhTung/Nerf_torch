@@ -8,12 +8,13 @@ import torch
 class LlffDataset(Dataset):
     def __init__(self, data, device):
         self.data = torch.Tensor(data).to(device)
+        self.device = device
       
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
-        return self.data[idx][0], self.data[idx][0], self.data[idx][2]   # (ro, rd), target
+        return self.data[idx][0], self.data[idx][1], self.data[idx][2]   # (ro, rd), target
 
 
 
@@ -24,7 +25,7 @@ class LlffProcessor:
 
         Use get_*_data function to get trainning or testing data
     """
-    def __init__(self):
+    def __init__(self, device):
         self.llffhold = 8
         self.no_ndc = False
 
@@ -40,6 +41,8 @@ class LlffProcessor:
 
         self.train_data = None
         self.test_data = None
+
+        self.device = device
 
         self.preprocess_dataset()
 
@@ -103,22 +106,24 @@ class LlffProcessor:
         test_rays_rgb = np.reshape(test_rays_rgb, [-1,3,3]) # [(N-1)*H*W, ro+rd+rgb, 3]
         test_rays_rgb = test_rays_rgb.astype(np.float32)
 
-        np.random.shuffle(train_rays_rgb)  
-        np.random.shuffle(test_rays_rgb)  
+        # np.random.shuffle(train_rays_rgb)  
+        # np.random.shuffle(test_rays_rgb)  
 
         self.train_data = train_rays_rgb
         self.test_data = test_rays_rgb
 
 
 def get_data_loader(batch_size, device):
-    data_processor = LlffProcessor()
+    data_processor = LlffProcessor(device)
     train_data = data_processor.get_train_data()
     test_data = data_processor.get_test_data()
 
     LlffTrainData = LlffDataset(train_data, device)
     LlffTestData = LlffDataset(test_data, device)
 
-    train_dataloader = DataLoader(LlffTrainData, batch_size=batch_size, shuffle=True, num_workers=0)
-    test_dataloader = DataLoader(LlffTestData, batch_size=batch_size, shuffle=False, num_workers=0)
+    train_dataloader = DataLoader(LlffTrainData, batch_size=batch_size, shuffle=True, num_workers=0,\
+                                             generator=torch.Generator(device='cuda'))
+    test_dataloader = DataLoader(LlffTestData, batch_size=batch_size, shuffle=False, num_workers=0,\
+                                                generator=torch.Generator(device='cuda'))
 
     return train_dataloader, test_dataloader, data_processor.get_camera_intrinsic()
