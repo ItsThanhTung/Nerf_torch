@@ -87,3 +87,11 @@ class NeRF(nn.Module):
         idx_alpha_linear = 2 * self.D + 6
         self.alpha_linear.weight.data = torch.from_numpy(np.transpose(weights[idx_alpha_linear]))
         self.alpha_linear.bias.data = torch.from_numpy(np.transpose(weights[idx_alpha_linear+1]))
+
+
+if __name__ == '__main__':
+    coarsed_net = NeRF(D=8, W=256, input_ch=63, input_ch_views=27, output_ch=5, skips=[4], use_viewdirs=True)
+    fined_net = NeRF(D=8, W=256, input_ch=63, input_ch_views=27, output_ch=5, skips=[4], use_viewdirs=True)
+    dummy_data = torch.rand((65536, 90))
+    print(dummy_data.shape)
+    print(coarsed_net.forward(dummy_data).shape)
